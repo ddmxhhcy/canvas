@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            /* border: 1px red solid; */
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+        }
+
+        .header {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            border-bottom: 1px lightgray solid;
+            background-color: white;
+            line-height: 60px;
+            z-index: 1;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            border-top: 1px lightgray solid;
+            background-color: white;
+            line-height: 60px;
+            z-index: 1;
+        }
+
+        #copycanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .options {
+            display: inline-block;
+            vertical-align: middle;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-repeat: no-repeat;
+            background-size: 100%;
+        }
+
+        .options:hover {
+            cursor: pointer;
+            background-color: orange;
+        }
+
+        .alertoptions {
+            display: inline-block;
+            vertical-align: middle;
+            width: 80px;
+            height: 80px;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+        }
+
+        .alertoptions:hover {
+            cursor: pointer;
+            /* background-color: red; */
+        }
+
+        .alert {
+            z-index: 9;
+            position: fixed;
+            width: 400px;
+            border-radius: 16px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* border: 1px red solid; */
+            display: none;
+            background-color: white;
+            text-align: center;
+            padding: 10px;
+        }
+
+        #bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            background-color: rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .button {
+            bottom: 0;
+            text-align: center;
+            width: 60%;
+            margin: 10px auto;
+            border-radius: 5%;
+            background-color: #1296DB;
+            color: white;
+        }
+
+        .button:hover {
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="header" id="header">
+        <div id="drawpen" class="options" style="background-image: url(img/画笔.png);background-color: orange;">
+        </div>
+        <div id="download" class="options" style="background-image: url(img/下载图片.png);">
+        </div>
+        <div class="options" style="background-image: url(img/背景图片.png);" onclick="bgalert.style.display = 'block',bg.style.display = 'block'">
+        </div>
+        <div class="options" style="background-image: url(img/颜色.png);"
+            onclick="pencolorAlert.style.display = 'block',bg.style.display = 'block';">
+        </div>
+        <div id="shape" class="options" style="background-image: url(img/形状.png);"></div>
+        <div class="options" style="background-image: url(img/线条粗细.png);"
+            onclick="pensizeAlert.style.display = 'block',bg.style.display = 'block';"></div>
+        <div id="erase" class="options" style="background-image: url(img/橡皮檫.png);"></div>
+        <div id="pre" class="options" style="background-image: url(img/上一步.png);"></div>
+        <div id="next" class="options" style="background-image: url(img/下一步.png);"></div>
+    </div>
+
+    <canvas id="canvas" style="background-image: url(img/bg0.png);"></canvas>
+    <canvas id="copycanvas"></canvas>
+    <div id="bg"></div>
+
+    <!-- 形状弹窗 -->
+    <div class="alert" id="shapealert">
+        <h1 style="margin: 10px;">形状</h1>
+        <div>
+            <div class="alertoptions" style="background-image: url(img/曲线.png);background-color: rgba(0, 0, 0, 0.5);"
+                onclick="change(0,'curve')"></div>
+            <div class="alertoptions" style="background-image: url(img/直线.png);" onclick="change(1,'straight')"></div>
+            <div class="alertoptions" style="background-image: url(img/三角形.png);" onclick="changeShape(2,3)"></div>
+            <div class="alertoptions" style="background-image: url(img/正方形.png);" onclick="changeShape(3,4)"></div>
+            <div class="alertoptions" style="background-image: url(img/五边形.png);" onclick="changeShape(4,5)"></div>
+            <div class="alertoptions" style="background-image: url(img/六边形.png);" onclick="changeShape(5,6)"></div>
+        </div>
+        <div
+            style="display: inline-block;vertical-align: middle;width: 45%;height: 80px;line-height: 80px;text-align: left;font-size: 30px;">
+            填充</div>
+        <div style="text-align: right;display: inline-block;width: 45%; vertical-align: middle;">
+            <div id="on" class="alertoptions" style="background-image: url(img/按钮0.png);"></div>
+        </div>
+        <div class="button" onclick="shapealert.style.display='none',bg.style.display='none'">
+            <h1>确定</h1>
+        </div>
+    </div>
+
+    <!-- 背景图弹窗 -->
+    <div class="alert" id="bgalert">
+        <h1 style="margin: 10px;">自带背景</h1>
+        <div style="margin: 10px;">
+            <div class="alertoptions" style="background-image: url(img/bg0.png);border: 1px black solid;"
+                onclick="bgchange(0)"></div>
+            <div class="alertoptions" style="background-image: url(img/bg1.png);" onclick="bgchange(1)"></div>
+            <div class="alertoptions" style="background-image: url(img/bg2.png);" onclick="bgchange(2)"></div>
+
+        </div>
+    </div>
+
+    <!-- 画笔粗细弹窗 -->
+    <div class="alert" id="pensizeAlert">
+        <h1 style="margin: 10px;">画笔粗细</h1>
+        <div style="margin: 10px;">
+            <input id="pensize" type="range" value="1" min="1" max="50" style="width: 250px;">
+            <h1 id="pensizeNum" style="font-size: 20px;width: 40px;display: inline-block;">1</h1>
+
+        </div>
+        <div style="height: 50px;">
+            <div id="linewidth" style="background-color: black;width: 80%;margin: 0 auto;height: 1px;"></div>
+        </div>
+        <div class="button" onclick="pensizeAlert.style.display='none',bg.style.display='none'">
+            <h1>确定</h1>
+        </div>
+    </div>
+
+    <!-- 画笔颜色弹窗 -->
+    <div class="alert" id="pencolorAlert">
+        <h1 style="margin: 10px;">画笔颜色</h1>
+        <div style="margin: 10px;">
+            <h1 style="font-size: 20px;width: 40px;display: inline-block;color: red;">红</h1>
+            <input id="red" type="range" value="0" min="0" max="255" style="width: 250px;">
+            <h1 id="redNum" style="font-size: 20px;width: 40px;display: inline-block;">0</h1>
+
+            <h1 style="font-size: 20px;width: 40px;display: inline-block;color: green;">绿</h1>
+            <input id="green" type="range" value="0" min="0" max="255" style="width: 250px;">
+            <h1 id="greenNum" style="font-size: 20px;width: 40px;display: inline-block;">0</h1>
+
+            <h1 style="font-size: 20px;width: 40px;display: inline-block;color: blue;">蓝</h1>
+            <input id="blue" type="range" value="0" min="0" max="255" style="width: 250px;">
+            <h1 id="blueNum" style="font-size: 20px;width: 40px;display: inline-block;">0</h1>
+        </div>
+        <div style="height: 50px;">
+            <div id="linecolor" style="background-color: black;width: 80%;margin: 0 auto;height: 30px;"></div>
+        </div>
+        <div class="button"
+            onclick="pencolorAlert.style.display='none',bg.style.display='none',context.fillStyle=context.strokeStyle='rgb('+red.value+','+green.value+','+blue.value+')'">
+            <h1>确定</h1>
+        </div>
+    </div>
+
+    <!-- 橡皮檫大小弹窗 -->
+    <div class="alert" id="erasesizeAlert">
+        <h1 style="margin: 10px;">橡皮檫</h1>
+        <div style="margin: 10px;">
+            <input id="erasesize" type="range" value="1" min="1" max="50" style="width: 250px;">
+            <h1 id="erasesizeNum" style="font-size: 20px;width: 40px;display: inline-block;">1</h1>
+
+        </div>
+        <div style="height: 50px;">
+            <div id="eraselinewidth" style="background-color: black;width: 80%;margin: 0 auto;height: 1px;"></div>
+        </div>
+        <div class="button"
+            onclick="erasesizeAlert.style.display='none',bg.style.display='none',eraseWidth=erasesize.value">
+            <h1>确定</h1>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        var DrawingSurface = [];
+        var DrawingSurfaceIndex = 0;
+        var maxDrawingSurfaceIndex=0;
+        var drawpen = document.getElementById('drawpen');
+        var erase = document.getElementById('erase');
+        var canvas = document.getElementById('canvas'),
+            context = canvas.getContext('2d'),
+            dragging = false,//拖动
+            pressing=false,//按下
+            status = 'curve',
+            mousedown = {},
+            Point = function (x, y) {
+                this.x = x;
+                this.y = y;
+            },
+            sides,
+            eraseWidth = 10;
+
+        var copycanvas = document.getElementById('copycanvas'),
+            copycontext = copycanvas.getContext('2d');
+
+        copycanvas.height = document.body.clientHeight;
+        copycanvas.width = document.body.clientWidth;
+
+        canvas.height = document.body.clientHeight;
+        canvas.width = document.body.clientWidth;
+
+        //获得多边形顶点坐标
+        function getPolygonPoints(centerX, centerY, radius, sides, startAngle) {
+            var points = [],
+                angle = startAngle || 0;
+
+            for (var i = 0; i < sides; ++i) {
+                points.push(new Point(centerX + radius * Math.sin(angle),
+                    centerY - radius * Math.cos(angle)));
+                angle += 2 * Math.PI / sides;
+            }
+
+            return points;
+        }
+
+        //创建多边形路径
+        function createPolygonPath(centerX, centerY, radius, sides, startAngle) {
+            var points = getPolygonPoints(centerX, centerY, radius, sides, startAngle);
+            context.beginPath();
+            context.moveTo(points[0].x, points[0].y);
+
+            for (var i = 1; i < sides; ++i) {
+                context.lineTo(points[i].x, points[i].y);
+            }
+            context.closePath();
+        }
+
+        //绘制形状
+        function drawRubberbandShape(loc, sides, startAngle) {
+            var radius;
+
+            if (mousedown.y == loc.y) {
+                radius = Math.abs(loc.x - mousedown.x);
+            }
+            else {
+
+                radius = Math.sqrt(Math.pow(loc.x - mousedown.x, 2) + Math.pow(loc.y - mousedown.y, 2));
+            }
+
+            createPolygonPath(mousedown.x, mousedown.y, radius, sides, startAngle);
+
+            context.stroke();
+
+            if (num == 1) {
+                context.fill();
+            }
+
+        }
+
+        canvas.onmousedown = function (e) {
+            // e.preventDefault();
+            var loc = windowToCanvas(e.clientX, e.clientY);
+            mousedown.x = loc.x;
+            mousedown.y = loc.y;
+
+            pressing = true;
+
+            switch (status) {
+                case 'curve':
+                    context.beginPath();
+                    context.moveTo(loc.x, loc.y);
+                    break;
+                case 'straight':
+                    saveDrawingSurface();
+                    break;
+                case 'polygon':
+                    saveDrawingSurface();
+                    break;
+
+            }
+
+        }
+
+
+        canvas.onmousemove = function (e) {
+            // e.preventDefault();//避免从其它地方移入canvas出现bug
+            
+            if (pressing) {
+                dragging=true;
+                var loc = windowToCanvas(e.clientX, e.clientY);
+
+                switch (status) {
+                    case 'curve':
+                        context.lineTo(loc.x, loc.y) //鼠标点下去的位置
+                        context.stroke();
+                        break;
+                    case 'straight':
+                        restoreDrawingSurface();
+                        context.beginPath();
+                        context.moveTo(mousedown.x, mousedown.y);
+                        context.lineTo(loc.x, loc.y);
+                        context.stroke();
+                        break;
+                    case 'polygon':
+                        restoreDrawingSurface();
+                        drawRubberbandShape(loc, sides, Math.PI / sides * ((sides + 1) % 2));
+                        break;
+                    case 'erase':
+                        context.clearRect(loc.x, loc.y, eraseWidth, eraseWidth);
+                        break;
+                }
+
+            }
+        }
+
+        canvas.onmouseup = function (e) {
+            // e.preventDefault();
+            pressing=false;
+            if (dragging) {
+                dragging = false;
+                DrawingSurfaceIndex++;
+                maxDrawingSurfaceIndex=DrawingSurfaceIndex;
+                DrawingSurface[DrawingSurfaceIndex]=context.getImageData(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        //坐标转换
+        function windowToCanvas(x, y) {
+            var bbox = canvas.getBoundingClientRect();
+            return { x: x - bbox.left * (canvas.width / bbox.width), y: y - bbox.top * (canvas.height / bbox.height) }
+        }
+
+        //保存绘图表面
+        function saveDrawingSurface() {
+            drawingSurfaceImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        }
+
+        //恢复绘图表面
+        function restoreDrawingSurface() {
+            context.putImageData(drawingSurfaceImageData, 0, 0);
+        }
+
+        drawpen.onclick = function () {
+            drawpen.style.backgroundColor = 'orange';
+            status = 'curve';
+            erase.style.backgroundColor = '';
+        }
+
+        erase.onclick = function () {
+            erasesizeAlert.style.display = 'block';
+            bg.style.display = 'block';
+            erase.style.backgroundColor = 'orange';
+            status = 'erase';
+            drawpen.style.backgroundColor = '';
+        }
+        //记录最初的绘图表面
+        DrawingSurface[0] = context.getImageData(0, 0, canvas.width, canvas.height);
+    </script>
+    <script>
+
+        var download = document.getElementById('download');
+
+        download.onclick = function () {
+
+            let img = new Image();
+            img.src = canvas.style.backgroundImage.substring(5, 16);
+
+            // 加载背景图片,加载出来之后再下载
+            img.onload = () => {
+                copycontext.drawImage(img, 0, 0, canvas.width, canvas.height);
+                copycontext.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+                var link = document.createElement("a");
+                var imgData = copycanvas.toDataURL({ format: 'png', quality: 1, width: 20000, height: 4000 });
+                var strDataURI = imgData.substr(22, imgData.length);
+                var blob = dataURLtoBlob(imgData);
+                var objurl = URL.createObjectURL(blob);
+                link.download = "grid1.png";
+                link.href = objurl;
+                link.click();
+            }
+
+        }
+
+        //满足大图片的下载
+        function dataURLtoBlob(dataurl) {
+            var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], { type: mime });
+        }
+
+    </script>
+    <script>
+        var shape = document.getElementById('shape');
+        var shapealert = document.getElementById('shapealert');
+        var num = 0;
+        var on = document.getElementById('on');//填充按钮
+        var bg = document.getElementById('bg');//半透明背景
+        var bgalert = document.getElementById('bgalert');
+        var pensize = document.getElementById('pensize');
+        var pensizeNum = document.getElementById('pensizeNum');
+        var linewidth = document.getElementById('linewidth');
+
+        var alertoptions = document.getElementsByClassName('alertoptions');
+        var oldIndex = 0;
+        function change(newIndex, str) {
+            alertoptions[oldIndex].style.backgroundColor = 'white';
+            alertoptions[newIndex].style.backgroundColor = 'rgba(0,0,0,0.5)';
+            oldIndex = newIndex;
+            status = str;
+        }
+        function changeShape(newIndex, side) {
+            alertoptions[oldIndex].style.backgroundColor = 'white';
+            alertoptions[newIndex].style.backgroundColor = 'rgba(0,0,0,0.5)';
+            oldIndex = newIndex;
+            status = 'polygon';
+            sides = side;
+        }
+
+        function bgchange(i) {
+            canvas.style.backgroundImage = 'url(img/bg' + i + '.png)';
+            bgalert.style.display = 'none';
+            bg.style.display = 'none';
+        }
+
+        on.onclick = function () {
+            num = (num + 1) % 2;
+            on.style.backgroundImage = 'url(img/按钮' + num + '.png)';
+        }
+        shape.onclick = function () {
+            shapealert.style.display = 'block';
+            bg.style.display = 'block';
+        }
+
+        pensize.oninput = function () {
+            pensizeNum.innerText = pensize.value;
+            linewidth.style.height = pensize.value + 'px';
+            context.lineWidth = pensize.value;
+        }
+    </script>
+    <script>
+        //改变画笔颜色
+        var red = document.getElementById('red');
+        var redNum = document.getElementById('redNum');
+        var green = document.getElementById('green');
+        var greenNum = document.getElementById('greenNum');
+        var blue = document.getElementById('blue');
+        var blueNum = document.getElementById('blueNum');
+        var linecolor = document.getElementById('linecolor');
+
+        red.oninput = function () {
+            redNum.innerText = red.value;
+            linecolor.style.backgroundColor = 'rgb(' + red.value + ',' + green.value + ',' + blue.value + ')';
+        }
+
+        green.oninput = function () {
+            greenNum.innerText = green.value;
+            linecolor.style.backgroundColor = 'rgb(' + red.value + ',' + green.value + ',' + blue.value + ')';
+        }
+
+        blue.oninput = function () {
+            blueNum.innerText = blue.value;
+            linecolor.style.backgroundColor = 'rgb(' + red.value + ',' + green.value + ',' + blue.value + ')';
+        }
+    </script>
+    <!-- 除去鼠标移入菜单栏出现意外 -->
+    <script>
+        var header = document.getElementById('header');
+        header.onmouseenter = function () {
+            if (dragging) {
+                dragging = false;
+                pressing=false;
+                console.log('hcyxhddm')
+            }
+        }
+    </script>
+    <script>
+        //橡皮檫
+        var erasesize = document.getElementById('erasesize');
+        var erasesizeNum = document.getElementById('erasesizeNum');
+        var eraselinewidth = document.getElementById('eraselinewidth');
+
+        erasesize.oninput = function () {
+            erasesizeNum.innerText = erasesize.value;
+            eraselinewidth.style.height = erasesize.value + 'px';
+        }
+    </script>
+    <script>
+        //上一步，下一步
+        var pre = document.getElementById('pre');
+        var next = document.getElementById('next');
+
+        pre.onclick = function () {
+            if(DrawingSurfaceIndex>0){
+                DrawingSurfaceIndex--;
+                context.putImageData(DrawingSurface[DrawingSurfaceIndex], 0, 0);
+            }
+        }
+
+        next.onclick = function () {
+            
+            if(DrawingSurfaceIndex<maxDrawingSurfaceIndex){
+                DrawingSurfaceIndex++;
+                context.putImageData(DrawingSurface[DrawingSurfaceIndex], 0, 0);
+            }
+        }
+    </script>
+    
+    <script>
+        document.onselectstart=new Function("return false");//取消网页连续点击变蓝
+    </script>
+</body>
+
+</html>
