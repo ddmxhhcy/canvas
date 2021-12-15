@@ -437,7 +437,7 @@
                 var strDataURI = imgData.substr(22, imgData.length);
                 var blob = dataURLtoBlob(imgData);
                 var objurl = URL.createObjectURL(blob);
-                link.download = "grid1.png";
+                link.download = "download.png";
                 link.href = objurl;
                 link.click();
             }
